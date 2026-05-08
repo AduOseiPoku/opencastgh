@@ -41,6 +41,18 @@ def event_detail(request, slug):
     return render(request, 'voting/event_detail.html', context)
 
 
+def category_detail(request, slug, category_id):
+    event = get_object_or_404(Event, slug=slug, is_active=True)
+    category = get_object_or_404(Category, pk=category_id, event=event)
+    nominees = category.nominees.filter(is_active=True)
+    context = {
+        'event': event,
+        'category': category,
+        'nominees': nominees,
+    }
+    return render(request, 'voting/category_detail.html', context)
+
+
 def nominee_detail(request, slug, nominee_id):
     event = get_object_or_404(Event, slug=slug, is_active=True)
     nominee = get_object_or_404(Nominee, pk=nominee_id, category__event=event, is_active=True)
@@ -82,7 +94,6 @@ def initiate_vote(request, slug, nominee_id):
     txn = Transaction.objects.create(
         nominee=nominee,
         voter_email=settings.NOTIFICATION_EMAIL,
-        voter_phone=form.cleaned_data.get('voter_phone', ''),
         num_votes=num_votes,
         amount=amount,
         price_per_vote_snapshot=event.price_per_vote,

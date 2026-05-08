@@ -142,18 +142,8 @@
 
       <div class="form-group">
         <label class="form-label">Number of Votes</label>
-        <select name="num_votes" id="id_num_votes" class="form-control" onchange="updatePrice()">
-          {% for value, label in form.num_votes.field.choices %}
-          <option value="{{ value }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Phone Number <span style="color:var(--text-dim)">(optional)</span></label>
-        <input type="tel" name="voter_phone" class="form-control"
-               placeholder="024XXXXXXX"
-               value="{{ form.voter_phone.value|default:'' }}">
+        <input type="number" name="num_votes" id="id_num_votes" class="form-control"
+               min="1" value="1" oninput="updatePrice()">
       </div>
 
       <button type="submit" class="btn btn-gold btn-block btn-lg" style="margin-top:0.5rem;">

@@ -1,0 +1,133 @@
+{% extends "voting/base.html" %}
+{% block title %}{{ category.name }} — {{ event.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .event-hero {
+    background: var(--black);
+    padding: 3rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: relative; overflow: hidden;
+  }
+  .event-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(245,200,66,0.06) 0%, transparent 70%);
+  }
+  .event-hero-inner { max-width: 1100px; margin: 0 auto; position: relative; }
+  .event-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800; letter-spacing: -1px;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+  }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+    margin-bottom: 1rem;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--gold); }
+
+  .nominees-section { padding: 2.5rem 1.5rem; }
+  .nominee-card {
+    background: var(--dark-2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: block;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .nominee-card:hover { transform: translateY(-4px); border-color: rgba(245,200,66,0.3); }
+  .nominee-photo {
+    height: 200px;
+    background: linear-gradient(135deg, var(--dark-3), var(--mid));
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .nominee-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .nominee-photo-placeholder {
+    font-family: var(--font-display);
+    font-size: 4rem; font-weight: 800;
+    color: rgba(245,200,66,0.15);
+  }
+  .nominee-body { padding: 1.1rem; }
+  .nominee-name {
+    font-family: var(--font-display);
+    font-size: 1rem; font-weight: 700;
+    color: var(--white); margin-bottom: 0.75rem;
+  }
+  .vote-btn {
+    display: flex; width: 100%;
+    background: var(--gold);
+    color: var(--black);
+    border: none; border-radius: var(--radius-sm);
+    padding: 0.65rem 1rem;
+    font-family: var(--font-display);
+    font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    align-items: center; justify-content: center; gap: 0.4rem;
+    transition: background 0.2s;
+  }
+  .vote-btn:hover { background: var(--gold-light); }
+  .vote-btn:disabled { background: var(--mid); color: var(--text-dim); cursor: not-allowed; }
+
+  .status-banner {
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 500;
+  }
+  .status-banner.closed { background: rgba(231,76,60,0.1); color: #F5A39A; }
+  .status-banner.open { background: rgba(46,204,113,0.08); color: #7FECA3; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if event.is_open %}
+<div class="status-banner open">✓ Voting is OPEN — GHS {{ event.price_per_vote }} per vote</div>
+{% else %}
+<div class="status-banner closed">✗ Voting is currently closed for this event</div>
+{% endif %}
+
+<div class="event-hero">
+  <div class="event-hero-inner">
+    <a href="{% url 'event_detail' event.slug %}" class="back-link">← Back to {{ event.name }}</a>
+    <h1 class="event-title">{{ category.name }}</h1>
+    {% if category.description %}<p style="color:var(--text-dim);max-width:600px;">{{ category.description }}</p>{% endif %}
+  </div>
+</div>
+
+<div class="container">
+  <div class="nominees-section" style="padding-left:0;padding-right:0;">
+    <div class="grid-3">
+      {% for nominee in nominees %}
+      <div class="nominee-card">
+        <a href="{% url 'nominee_detail' event.slug nominee.id %}" style="text-decoration:none;color:inherit;">
+          <div class="nominee-photo">
+            {% if nominee.photo %}
+              <img src="{{ nominee.photo.url }}" alt="{{ nominee.name }}">
+            {% else %}
+              <div class="nominee-photo-placeholder">{{ nominee.name|slice:":1"|upper }}</div>
+            {% endif %}
+          </div>
+          <div class="nominee-body">
+            <div class="nominee-name">{{ nominee.name }}</div>
+          </div>
+        </a>
+        <div style="padding:0 1.1rem 1.1rem;">
+          {% if event.is_open %}
+          <a href="{% url 'nominee_detail' event.slug nominee.id %}" class="vote-btn">⭐ Vote Now</a>
+          {% else %}
+          <button class="vote-btn" disabled>Voting Closed</button>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--text-dim);grid-column:1/-1;">No nominees in this category yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

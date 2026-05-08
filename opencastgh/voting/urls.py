@@ -9,6 +9,7 @@ urlpatterns = [
     path('event/<slug:slug>/', views.event_detail, name='event_detail'),
     path('event/<slug:slug>/results/', views.event_results, name='event_results'),
     path('event/<slug:slug>/price/', views.get_vote_price, name='get_vote_price'),
+    path('event/<slug:slug>/category/<int:category_id>/', views.category_detail, name='category_detail'),
 
     # Nominees & voting
     path('event/<slug:slug>/nominee/<int:nominee_id>/', views.nominee_detail, name='nominee_detail'),
