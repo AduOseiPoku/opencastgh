@@ -20,10 +20,10 @@ class NomineeInline(admin.TabularInline):
 class EventAdmin(admin.ModelAdmin):
     list_display = [
         'name', 'price_per_vote', 'bundle_info',
-        'is_active', 'show_results', 'is_open_display',
+        'is_active', 'show_results', 'bundle_enabled', 'is_open_display',
         'start_date', 'end_date'
     ]
-    list_editable = ['is_active', 'show_results', 'price_per_vote']
+    list_editable = ['is_active', 'show_results', 'bundle_enabled', 'price_per_vote']
     list_filter = ['is_active', 'show_results']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
@@ -33,11 +33,8 @@ class EventAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'description', 'banner')
         }),
         ('Voting Pricing', {
-            'fields': ('price_per_vote', 'bundle_size', 'bundle_price'),
-            'description': (
-                'Set the price per vote in GHS. Optionally configure bundle pricing '
-                '(e.g. 5 votes for GHS 4.00).'
-            ),
+            'fields': ('price_per_vote', 'bundle_enabled', 'bundle_size', 'bundle_price'),
+            'description': 'Set price per vote. Enable bundle pricing to sell votes in packs.',
         }),
         ('Visibility & Schedule', {
             'fields': ('is_active', 'show_results', 'start_date', 'end_date')
@@ -51,9 +48,9 @@ class EventAdmin(admin.ModelAdmin):
     is_open_display.short_description = 'Status'
 
     def bundle_info(self, obj):
-        if obj.bundle_size > 1 and obj.bundle_price:
-            return f"{obj.bundle_size} votes / GHS {obj.bundle_price}"
-        return "—"
+        if obj.bundle_enabled and obj.bundle_size > 1 and obj.bundle_price:
+            return f"ON — {obj.bundle_size} votes / GHS {obj.bundle_price}"
+        return "Off"
     bundle_info.short_description = 'Bundle'
 
 
@@ -84,9 +81,9 @@ class TransactionAdmin(admin.ModelAdmin):
         'num_votes', 'amount_display', 'status_badge', 'created_at'
     ]
     list_filter = ['status', 'nominee__category__event']
-    search_fields = ['voter_email', 'voter_name', 'reference', 'paystack_reference']
+    search_fields = ['voter_email', 'reference', 'paystack_reference']
     readonly_fields = [
-        'reference', 'paystack_reference', 'nominee', 'voter_name',
+        'reference', 'paystack_reference', 'nominee',
         'voter_email', 'voter_phone', 'num_votes', 'amount',
         'price_per_vote_snapshot', 'ip_address', 'created_at', 'updated_at'
     ]

@@ -15,13 +15,17 @@ class Event(models.Model):
         help_text="Price in GHS per single vote"
     )
     # Optional: sell votes in bundles (e.g. 5 votes for GHS 4)
+    bundle_enabled = models.BooleanField(
+        default=False,
+        help_text="Toggle bundle pricing on or off."
+    )
     bundle_size = models.PositiveIntegerField(
         default=1,
-        help_text="Number of votes per bundle. Set to 1 for single-vote pricing."
+        help_text="Number of votes per bundle."
     )
     bundle_price = models.DecimalField(
         max_digits=8, decimal_places=2, null=True, blank=True,
-        help_text="Bundle price override. Leave blank to use price_per_vote × bundle_size."
+        help_text="Price for one bundle."
     )
     is_active = models.BooleanField(default=True)
     show_results = models.BooleanField(
@@ -45,8 +49,7 @@ class Event(models.Model):
 
     def get_price_for_votes(self, num_votes):
         """Calculate total price for a given number of votes."""
-        if self.bundle_size > 1 and self.bundle_price:
-            # Calculate number of full bundles needed
+        if self.bundle_enabled and self.bundle_size > 1 and self.bundle_price:
             import math
             bundles = math.ceil(num_votes / self.bundle_size)
             return bundles * self.bundle_price
@@ -95,7 +98,7 @@ class Transaction(models.Model):
 
     reference = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nominee = models.ForeignKey(Nominee, on_delete=models.PROTECT, related_name='transactions')
-    voter_name = models.CharField(max_length=255)
+    voter_name = models.CharField(max_length=255, blank=True)
     voter_email = models.EmailField()
     voter_phone = models.CharField(max_length=20, blank=True)
     num_votes = models.PositiveIntegerField(default=1)

@@ -81,8 +81,7 @@ def initiate_vote(request, slug, nominee_id):
     # Create pending transaction
     txn = Transaction.objects.create(
         nominee=nominee,
-        voter_name=form.cleaned_data['voter_name'],
-        voter_email=form.cleaned_data['voter_email'],
+        voter_email=settings.NOTIFICATION_EMAIL,
         voter_phone=form.cleaned_data.get('voter_phone', ''),
         num_votes=num_votes,
         amount=amount,
@@ -92,7 +91,7 @@ def initiate_vote(request, slug, nominee_id):
 
     callback_url = request.build_absolute_uri(f'/vote/callback/{txn.reference_str}/')
     auth_url = initialize_transaction(
-        email=txn.voter_email,
+        email=settings.NOTIFICATION_EMAIL,
         amount_ghs=txn.amount,
         reference=txn.reference_str,
         callback_url=callback_url,

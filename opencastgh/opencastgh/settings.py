@@ -86,6 +86,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 # Paystack
 PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY', default='sk_test_your_key_here')
 PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY', default='pk_test_your_key_here')
+NOTIFICATION_EMAIL = env('NOTIFICATION_EMAIL', default='admin@example.com')
 
 # Redis & Celery
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379/0')
