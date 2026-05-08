@@ -1,0 +1,49 @@
+{% extends "voting/base.html" %}
+{% block title %}Admin Login{% endblock %}
+
+{% block extra_head %}
+<style>
+  .login-page {
+    min-height: 80vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  .login-card {
+    background: var(--dark-2);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 100%; max-width: 400px;
+  }
+  .login-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem; font-weight: 800;
+    color: var(--white); margin-bottom: 0.4rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-title">Sign In</div>
+    <p class="text-dim mb-3" style="font-size:0.88rem;">Admin access to OpenCastGH</p>
+    {% if form.errors %}
+    <div class="alert alert-error">Invalid username or password.</div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control">
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-gold btn-block btn-lg mt-2">Sign In</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

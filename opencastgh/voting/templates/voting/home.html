@@ -1,0 +1,244 @@
+{% extends "voting/base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block extra_head %}
+<style>
+  .hero {
+    background: var(--black);
+    padding: 5rem 1.5rem 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,200,66,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -2px;
+    line-height: 1.05;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-title .accent {
+    color: var(--gold);
+    display: block;
+  }
+  .hero-sub {
+    max-width: 520px; margin: 1.25rem auto 0;
+    color: var(--text-dim); font-size: 1.1rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero-cta { animation: fadeUp 0.6s 0.2s ease both; margin-top: 2rem; }
+
+  .live-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+    margin-right: 6px;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(46,204,113,0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .events-section { padding: 3rem 0; }
+  .section-header {
+    display: flex; align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .event-card {
+    background: var(--dark-2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none; color: inherit;
+    display: block;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .event-card:hover { transform: translateY(-4px); border-color: rgba(245,200,66,0.25); }
+  .event-card-banner {
+    height: 160px;
+    background: linear-gradient(135deg, var(--dark-3), var(--mid));
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .event-card-banner img { width: 100%; height: 100%; object-fit: cover; }
+  .event-card-banner-placeholder {
+    font-family: var(--font-display);
+    font-size: 2.5rem; font-weight: 800;
+    color: rgba(245,200,66,0.15);
+    letter-spacing: -2px;
+  }
+  .event-card-body { padding: 1.25rem; }
+  .event-card-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem; font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.4rem;
+  }
+  .event-card-meta { font-size: 0.82rem; color: var(--text-dim); }
+  .event-card-price {
+    margin-top: 0.75rem;
+    font-size: 0.85rem; color: var(--gold);
+    font-weight: 600;
+  }
+  .event-card-footer {
+    padding: 0.9rem 1.25rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .empty-state {
+    text-align: center; padding: 4rem 2rem;
+    color: var(--text-dim);
+  }
+  .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <h1 class="hero-title">
+      Vote for Your
+      <span class="accent">Favourite Star</span>
+    </h1>
+    <p class="hero-sub">Ghana's premier platform for award ceremonies and talent shows. Support your favourite nominees with every vote.</p>
+    <div class="hero-cta">
+      {% if active_events %}
+        <a href="#live-events" class="btn btn-gold btn-lg">
+          <span class="live-dot"></span> See Live Events
+        </a>
+      {% else %}
+        <a href="#upcoming-events" class="btn btn-outline btn-lg">View Upcoming Events</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <!-- Live/Active Events -->
+  {% if active_events %}
+  <section class="events-section" id="live-events">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title"><span class="live-dot"></span>Live Now</h2>
+        <p class="section-sub">Voting is open — cast your votes now!</p>
+      </div>
+    </div>
+    <div class="grid-2">
+      {% for event in active_events %}
+      <a href="{% url 'event_detail' event.slug %}" class="event-card">
+        <div class="event-card-banner">
+          {% if event.banner %}
+            <img src="{{ event.banner.url }}" alt="{{ event.name }}">
+          {% else %}
+            <div class="event-card-banner-placeholder">{{ event.name|slice:":2"|upper }}</div>
+          {% endif %}
+          <span class="badge badge-green" style="position:absolute;top:12px;right:12px;">
+            <span class="live-dot"></span> Live
+          </span>
+        </div>
+        <div class="event-card-body">
+          <div class="event-card-name">{{ event.name }}</div>
+          <div class="event-card-meta">Closes {{ event.end_date|date:"M d, Y — H:i" }}</div>
+          <div class="event-card-price">GHS {{ event.price_per_vote }} per vote</div>
+        </div>
+        <div class="event-card-footer">
+          <span class="badge badge-gold">{{ event.categories.count }} categories</span>
+          <span class="btn btn-gold btn-sm">Vote Now →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Upcoming Events -->
+  {% if upcoming_events %}
+  <section class="events-section" id="upcoming-events">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Upcoming</h2>
+        <p class="section-sub">Coming soon — stay tuned</p>
+      </div>
+    </div>
+    <div class="grid-2">
+      {% for event in upcoming_events %}
+      <a href="{% url 'event_detail' event.slug %}" class="event-card">
+        <div class="event-card-banner">
+          {% if event.banner %}
+            <img src="{{ event.banner.url }}" alt="{{ event.name }}">
+          {% else %}
+            <div class="event-card-banner-placeholder">{{ event.name|slice:":2"|upper }}</div>
+          {% endif %}
+          <span class="badge badge-grey" style="position:absolute;top:12px;right:12px;">Upcoming</span>
+        </div>
+        <div class="event-card-body">
+          <div class="event-card-name">{{ event.name }}</div>
+          <div class="event-card-meta">Opens {{ event.start_date|date:"M d, Y" }}</div>
+          <div class="event-card-price">GHS {{ event.price_per_vote }} per vote</div>
+        </div>
+        <div class="event-card-footer">
+          <span class="badge badge-gold">{{ event.categories.count }} categories</span>
+          <span style="font-size:0.82rem;color:var(--text-dim);">Details →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Past Events -->
+  {% if past_events %}
+  <section class="events-section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Past Events</h2>
+        <p class="section-sub">View results from completed events</p>
+      </div>
+    </div>
+    <div class="grid-3">
+      {% for event in past_events %}
+      <a href="{% url 'event_results' event.slug %}" class="event-card">
+        <div class="event-card-banner" style="height:120px;">
+          {% if event.banner %}
+            <img src="{{ event.banner.url }}" alt="{{ event.name }}">
+          {% else %}
+            <div class="event-card-banner-placeholder">{{ event.name|slice:":2"|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="event-card-body">
+          <div class="event-card-name">{{ event.name }}</div>
+          <div class="event-card-meta">Ended {{ event.end_date|date:"M d, Y" }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if not active_events and not upcoming_events and not past_events %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🏆</div>
+    <h3 style="font-family:var(--font-display);color:var(--white);">No Events Yet</h3>
+    <p class="mt-1">Check back soon for upcoming award ceremonies and talent shows.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "voting/base.html" %}
+{% block title %}Vote for {{ nominee.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .vote-layout {
+    min-height: calc(100vh - 120px);
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 0;
+  }
+  @media (max-width: 860px) {
+    .vote-layout { grid-template-columns: 1fr; }
+    .vote-sidebar { border-left: none; border-top: 1px solid rgba(255,255,255,0.06); }
+  }
+
+  .nominee-panel {
+    background: var(--dark);
+    padding: 3rem;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .nominee-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 0% 50%, rgba(245,200,66,0.04), transparent 70%);
+    pointer-events: none;
+  }
+  .nominee-photo-lg {
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(245,200,66,0.3);
+    margin-bottom: 2rem;
+  }
+  .nominee-photo-placeholder-lg {
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--dark-3), var(--mid));
+    border: 3px solid rgba(245,200,66,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 5rem; font-weight: 800;
+    color: rgba(245,200,66,0.2);
+    margin-bottom: 2rem;
+  }
+  .nominee-name-lg {
+    font-family: var(--font-display);
+    font-size: 2.2rem; font-weight: 800;
+    color: var(--white); letter-spacing: -1px;
+    margin-bottom: 0.5rem;
+  }
+  .nominee-cat { color: var(--gold); font-size: 0.9rem; margin-bottom: 1rem; }
+  .nominee-bio { color: var(--text-dim); max-width: 420px; line-height: 1.7; }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+    margin-bottom: 2rem;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--gold); }
+
+  .vote-sidebar {
+    background: var(--dark-2);
+    border-left: 1px solid rgba(255,255,255,0.06);
+    padding: 3rem 2rem;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--white); margin-bottom: 0.3rem;
+  }
+  .sidebar-sub { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 2rem; }
+
+  .price-display {
+    background: var(--dark-3);
+    border: 1px solid rgba(245,200,66,0.15);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  .price-amount {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 800;
+    color: var(--gold);
+  }
+  .price-label { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem; }
+
+  .payment-badges {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.5rem;
+  }
+  .payment-badge {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-sm);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem; color: var(--text-dim);
+  }
+  .secure-note {
+    margin-top: 1rem;
+    font-size: 0.78rem; color: var(--text-dim);
+    text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vote-layout">
+  <!-- Left: Nominee Info -->
+  <div class="nominee-panel">
+    <a href="{% url 'event_detail' event.slug %}" class="back-link">← Back to {{ event.name }}</a>
+
+    {% if nominee.photo %}
+      <img src="{{ nominee.photo.url }}" alt="{{ nominee.name }}" class="nominee-photo-lg">
+    {% else %}
+      <div class="nominee-photo-placeholder-lg">{{ nominee.name|slice:":1"|upper }}</div>
+    {% endif %}
+
+    <div class="nominee-cat">{{ nominee.category.name }} · {{ event.name }}</div>
+    <h1 class="nominee-name-lg">{{ nominee.name }}</h1>
+    {% if nominee.bio %}
+    <p class="nominee-bio">{{ nominee.bio }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Right: Vote Form -->
+  <div class="vote-sidebar">
+    {% if event.is_open %}
+    <div class="sidebar-title">Cast Your Vote</div>
+    <div class="sidebar-sub">Support {{ nominee.name }} — every vote counts!</div>
+
+    <div class="price-display" id="price-display">
+      <div class="price-amount" id="price-amount">GHS {{ event.price_per_vote }}</div>
+      <div class="price-label" id="price-label">for 1 vote</div>
+    </div>
+
+    <form method="post" action="{% url 'initiate_vote' event.slug nominee.id %}" id="vote-form">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Number of Votes</label>
+        <select name="num_votes" id="id_num_votes" class="form-control" onchange="updatePrice()">
+          {% for value, label in form.num_votes.field.choices %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Full Name</label>
+        <input type="text" name="voter_name" class="form-control"
+               placeholder="Kwame Mensah" required
+               value="{{ form.voter_name.value|default:'' }}">
+        {% if form.voter_name.errors %}<ul class="errorlist">{% for e in form.voter_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="voter_email" class="form-control"
+               placeholder="you@example.com" required
+               value="{{ form.voter_email.value|default:'' }}">
+        <div class="form-help">Your receipt will be sent here.</div>
+        {% if form.voter_email.errors %}<ul class="errorlist">{% for e in form.voter_email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone Number <span style="color:var(--text-dim)">(optional)</span></label>
+        <input type="tel" name="voter_phone" class="form-control"
+               placeholder="024XXXXXXX"
+               value="{{ form.voter_phone.value|default:'' }}">
+      </div>
+
+      <button type="submit" class="btn btn-gold btn-block btn-lg" style="margin-top:0.5rem;">
+        Pay with Paystack →
+      </button>
+    </form>
+
+    <div class="payment-badges">
+      <span class="payment-badge">💳 Card</span>
+      <span class="payment-badge">📱 MTN MoMo</span>
+      <span class="payment-badge">📱 Telecel Cash</span>
+      <span class="payment-badge">📱 AT Money</span>
+    </div>
+    <div class="secure-note">🔒 Secured by Paystack</div>
+
+    {% else %}
+    <div style="text-align:center;padding:3rem 0;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+      <h3 style="font-family:var(--font-display);color:var(--white);">Voting Closed</h3>
+      <p class="mt-1" style="color:var(--text-dim);">Voting for this event has ended.</p>
+      <a href="{% url 'event_results' event.slug %}" class="btn btn-outline mt-3">View Results</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const pricePerVote = parseFloat("{{ event.price_per_vote }}");
+const slug = "{{ event.slug }}";
+
+function updatePrice() {
+  const numVotes = parseInt(document.getElementById('id_num_votes').value);
+  fetch(`/event/${slug}/price/?votes=${numVotes}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('price-amount').textContent = `GHS ${data.price.toFixed(2)}`;
+      document.getElementById('price-label').textContent = `for ${numVotes} vote${numVotes > 1 ? 's' : ''}`;
+    });
+}
+</script>
+{% endblock %}

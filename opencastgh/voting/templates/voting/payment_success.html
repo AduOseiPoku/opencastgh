@@ -1,0 +1,87 @@
+{% extends "voting/base.html" %}
+{% block title %}Payment Successful{% endblock %}
+
+{% block extra_head %}
+<style>
+  .result-page {
+    min-height: 80vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  .result-card {
+    background: var(--dark-2);
+    border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 480px; width: 100%;
+    text-align: center;
+  }
+  .result-icon { font-size: 4rem; margin-bottom: 1.5rem; animation: pop 0.5s ease; }
+  @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .result-title {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 800;
+    color: var(--white); margin-bottom: 0.75rem;
+  }
+  .result-detail { color: var(--text-dim); line-height: 1.7; }
+  .txn-box {
+    background: var(--dark-3);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin: 1.5rem 0;
+    text-align: left;
+    font-size: 0.88rem;
+  }
+  .txn-row { display: flex; justify-content: space-between; padding: 0.3rem 0; }
+  .txn-row:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .txn-key { color: var(--text-dim); }
+  .txn-val { color: var(--text); font-weight: 500; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-page">
+  <div class="result-card">
+    <div class="result-icon">🎉</div>
+    <h1 class="result-title">Vote Confirmed!</h1>
+    <p class="result-detail">
+      Your {{ transaction.num_votes }} vote{{ transaction.num_votes|pluralize }} for
+      <strong style="color:var(--gold);">{{ transaction.nominee.name }}</strong>
+      ha{{ transaction.num_votes|pluralize:"s,ve" }} been successfully recorded.
+    </p>
+
+    <div class="txn-box">
+      <div class="txn-row">
+        <span class="txn-key">Nominee</span>
+        <span class="txn-val">{{ transaction.nominee.name }}</span>
+      </div>
+      <div class="txn-row">
+        <span class="txn-key">Category</span>
+        <span class="txn-val">{{ transaction.nominee.category.name }}</span>
+      </div>
+      <div class="txn-row">
+        <span class="txn-key">Event</span>
+        <span class="txn-val">{{ transaction.nominee.category.event.name }}</span>
+      </div>
+      <div class="txn-row">
+        <span class="txn-key">Votes</span>
+        <span class="txn-val">{{ transaction.num_votes }}</span>
+      </div>
+      <div class="txn-row">
+        <span class="txn-key">Amount Paid</span>
+        <span class="txn-val" style="color:var(--gold);">GHS {{ transaction.amount }}</span>
+      </div>
+      <div class="txn-row">
+        <span class="txn-key">Reference</span>
+        <span class="txn-val" style="font-size:0.78rem;">{{ transaction.reference }}</span>
+      </div>
+    </div>
+
+    <p style="font-size:0.82rem;color:var(--text-dim);">A receipt has been sent to {{ transaction.voter_email }}</p>
+
+    <a href="{% url 'event_detail' transaction.nominee.category.event.slug %}" class="btn btn-gold btn-block mt-3">
+      ← Back to Event
+    </a>
+  </div>
+</div>
+{% endblock %}

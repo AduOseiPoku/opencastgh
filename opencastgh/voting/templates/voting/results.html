@@ -1,0 +1,107 @@
+{% extends "voting/base.html" %}
+{% block title %}Results — {{ event.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .results-hero {
+    background: var(--black);
+    padding: 3rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-align: center;
+  }
+  .results-hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800; color: var(--white);
+    letter-spacing: -1px;
+  }
+  .category-results { margin-bottom: 3rem; }
+  .cat-result-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--gold); margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .nominee-result-row {
+    background: var(--dark-2);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.6rem;
+    display: flex; align-items: center; gap: 1rem;
+    position: relative; overflow: hidden;
+  }
+  .nominee-result-row.top {
+    border-color: rgba(245,200,66,0.25);
+    background: linear-gradient(90deg, rgba(245,200,66,0.05), var(--dark-2));
+  }
+  .result-bar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(245,200,66,0.05);
+    transition: width 1s ease;
+  }
+  .result-rank {
+    font-family: var(--font-display);
+    font-size: 1.1rem; font-weight: 800;
+    color: var(--text-dim); width: 2rem; flex-shrink: 0;
+    position: relative;
+  }
+  .result-rank.gold { color: var(--gold); }
+  .result-name {
+    flex: 1; font-weight: 500;
+    color: var(--white); position: relative;
+  }
+  .result-votes {
+    font-family: var(--font-display);
+    font-weight: 700; color: var(--gold);
+    font-size: 1.05rem; position: relative;
+  }
+  .result-pct { font-size: 0.78rem; color: var(--text-dim); position: relative; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-hero">
+  <div class="container">
+    <div class="mb-2">
+      {% if event.is_open %}<span class="badge badge-green">Live Results</span>
+      {% else %}<span class="badge badge-grey">Final Results</span>{% endif %}
+    </div>
+    <h1>{{ event.name }}</h1>
+    <p class="mt-1" style="color:var(--text-dim);">Results as of {{ "now"|date:"M d, Y H:i" }}</p>
+    <a href="{% url 'event_detail' event.slug %}" class="btn btn-outline btn-sm mt-3">← Back to Event</a>
+  </div>
+</div>
+
+<div class="container" style="padding-top:2.5rem;padding-bottom:3rem;">
+  {% for category in categories %}
+  {% with nominees=category.nominees.all %}
+  <div class="category-results">
+    <h2 class="cat-result-title">🏆 {{ category.name }}</h2>
+    {% if nominees %}
+      {% with total=nominees|length %}
+      {% for nominee in nominees|dictsortreversed:"vote_count" %}
+      {% with total_votes=category.nominees.all|length %}
+      <div class="nominee-result-row {% if forloop.first %}top{% endif %}">
+        <div class="result-bar" style="width: {% if nominee.vote_count > 0 %}{{ nominee.vote_count }}{% else %}0{% endif %}%;max-width:100%;"></div>
+        <div class="result-rank {% if forloop.first %}gold{% endif %}">
+          {% if forloop.first %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+        </div>
+        <div class="result-name">{{ nominee.name }}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.1rem;">
+          <div class="result-votes">{{ nominee.vote_count }} vote{{ nominee.vote_count|pluralize }}</div>
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+      {% endwith %}
+    {% else %}
+      <p style="color:var(--text-dim);font-size:0.9rem;">No nominees in this category.</p>
+    {% endif %}
+  </div>
+  {% endwith %}
+  {% empty %}
+  <div style="text-align:center;padding:4rem 0;color:var(--text-dim);">No results available.</div>
+  {% endfor %}
+</div>
+{% endblock %}
