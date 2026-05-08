@@ -200,6 +200,19 @@ def event_results(request, slug):
     return render(request, 'voting/results.html', context)
 
 
+def category_results(request, slug, category_id):
+    event = get_object_or_404(Event, slug=slug, is_active=True)
+    if not event.show_results and not request.user.is_staff:
+        messages.info(request, "Results for this event are not yet public.")
+        return redirect('event_detail', slug=slug)
+
+    category = get_object_or_404(Category, pk=category_id, event=event)
+    nominees = category.nominees.all()
+    max_votes = max((n.vote_count for n in nominees), default=0)
+    context = {'event': event, 'category': category, 'nominees': nominees, 'max_votes': max_votes}
+    return render(request, 'voting/category_results.html', context)
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def get_client_ip(request):
