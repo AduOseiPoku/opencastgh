@@ -26,27 +26,6 @@
   .event-meta-item { font-size: 0.85rem; color: var(--text-dim); }
   .event-meta-item strong { color: var(--text); }
 
-  .categories-nav {
-    background: var(--black);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding: 0 1.5rem;
-    display: flex; gap: 0.25rem;
-    overflow-x: auto; scrollbar-width: none;
-  }
-  .categories-nav::-webkit-scrollbar { display: none; }
-  .cat-tab {
-    font-family: var(--font-display);
-    font-size: 0.85rem; font-weight: 600;
-    color: var(--text-dim);
-    padding: 0.85rem 1rem;
-    white-space: nowrap;
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-  .cat-tab:hover, .cat-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-
   .nominees-section { padding: 2.5rem 1.5rem; }
   .category-block { margin-bottom: 3rem; }
   .category-name {
@@ -145,14 +124,6 @@
     </div>
   </div>
 </div>
-
-{% if categories %}
-<nav class="categories-nav">
-  {% for category in categories %}
-  <a class="cat-tab" href="#cat-{{ category.id }}">{{ category.name }}</a>
-  {% endfor %}
-</nav>
-{% endif %}
 
 <div class="container">
   <div class="nominees-section" style="padding-left:0;padding-right:0;">

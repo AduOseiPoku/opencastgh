@@ -28,6 +28,11 @@ def home(request):
             is_active=True, end_date__lt=now
         ).order_by('-end_date')[:6],
     }
+    logger.debug(
+        "Home page loaded: %d active, %d upcoming events",
+        len(context['active_events']),
+        len(context['upcoming_events']),
+    )
     return render(request, 'voting/home.html', context)
 
 
@@ -89,6 +94,10 @@ def initiate_vote(request, slug, nominee_id):
 
     num_votes = form.cleaned_data['num_votes']
     amount = event.get_price_for_votes(num_votes)
+    logger.info(
+        "Vote initiated: nominee_id=%s, event=%s, votes=%d, ip=%s",
+        nominee_id, event.slug, num_votes, get_client_ip(request),
+    )
 
     # Create pending transaction
     txn = Transaction.objects.create(
@@ -100,6 +109,10 @@ def initiate_vote(request, slug, nominee_id):
         ip_address=get_client_ip(request),
     )
 
+    logger.info(
+        "Transaction created: ref=%s, amount=%s, nominee=%s",
+        txn.reference_str, txn.amount, nominee.name,
+    )
     callback_url = request.build_absolute_uri(f'/vote/callback/{txn.reference_str}/')
     auth_url = initialize_transaction(
         email=settings.NOTIFICATION_EMAIL,
@@ -117,6 +130,10 @@ def initiate_vote(request, slug, nominee_id):
     if not auth_url:
         txn.status = Transaction.Status.FAILED
         txn.save(update_fields=['status'])
+        logger.error(
+            "Paystack init failed: ref=%s, nominee_id=%s, event=%s",
+            txn.reference_str, nominee_id, slug,
+        )
         messages.error(request, "Could not connect to payment gateway. Please try again.")
         return redirect('nominee_detail', slug=slug, nominee_id=nominee_id)
 
@@ -130,12 +147,20 @@ def payment_callback(request, reference):
     # Verify directly with Paystack
     data = verify_transaction(str(reference))
     if data and data.get('status') == 'success':
+        logger.info(
+            "Payment verified at callback: ref=%s, nominee=%s, votes=%d",
+            reference, txn.nominee.name, txn.num_votes,
+        )
         _confirm_transaction(txn, data.get('reference', ''))
         messages.success(request, f"🎉 Your {txn.num_votes} vote(s) for {txn.nominee.name} have been recorded!")
         return render(request, 'voting/payment_success.html', {'transaction': txn})
     else:
         txn.status = Transaction.Status.FAILED
         txn.save(update_fields=['status', 'updated_at'])
+        logger.warning(
+            "Payment failed at callback: ref=%s, paystack_data=%s",
+            reference, data,
+        )
         messages.error(request, "Payment was not successful. Please try again.")
         return render(request, 'voting/payment_failed.html', {'transaction': txn})
 
@@ -161,11 +186,13 @@ def paystack_webhook(request):
     if event_type == 'charge.success':
         data = payload.get('data', {})
         reference = data.get('reference')
+        logger.info("Webhook charge.success received: ref=%s", reference)
         try:
             txn = Transaction.objects.get(reference=reference)
             _confirm_transaction(txn, reference)
+            logger.info("Webhook confirmed transaction: ref=%s", reference)
         except Transaction.DoesNotExist:
-            logger.error(f"Webhook: Transaction not found for reference {reference}")
+            logger.error("Webhook: Transaction not found for reference %s", reference)
 
     return HttpResponse(status=200)
 
@@ -191,6 +218,10 @@ def get_vote_price(request, slug):
 
 def event_results(request, slug):
     event = get_object_or_404(Event, slug=slug, is_active=True)
+    logger.debug(
+        "Results accessed: event=%s, user=%s, is_staff=%s",
+        slug, request.user, request.user.is_staff,
+    )
     if not event.show_results and not request.user.is_staff:
         messages.info(request, "Results for this event are not yet public.")
         return redirect('event_detail', slug=slug)
@@ -202,6 +233,10 @@ def event_results(request, slug):
 
 def category_results(request, slug, category_id):
     event = get_object_or_404(Event, slug=slug, is_active=True)
+    logger.debug(
+        "Category results accessed: event=%s, category_id=%s, user=%s, is_staff=%s",
+        slug, category_id, request.user, request.user.is_staff,
+    )
     if not event.show_results and not request.user.is_staff:
         messages.info(request, "Results for this event are not yet public.")
         return redirect('event_detail', slug=slug)
