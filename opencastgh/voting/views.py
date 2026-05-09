@@ -61,7 +61,8 @@ def category_detail(request, slug, category_id):
 def nominee_detail(request, slug, nominee_id):
     event = get_object_or_404(Event, slug=slug, is_active=True)
     nominee = get_object_or_404(Nominee, pk=nominee_id, category__event=event, is_active=True)
-    form = VoteForm()
+    max_votes = event.max_votes_per_transaction or None
+    form = VoteForm(max_votes=max_votes)
     context = {
         'event': event,
         'nominee': nominee,
@@ -82,7 +83,8 @@ def initiate_vote(request, slug, nominee_id):
         messages.error(request, "Voting for this event is not currently open.")
         return redirect('event_detail', slug=slug)
 
-    form = VoteForm(request.POST)
+    max_votes = event.max_votes_per_transaction or None
+    form = VoteForm(request.POST, max_votes=max_votes)
     if not form.is_valid():
         context = {
             'event': event,

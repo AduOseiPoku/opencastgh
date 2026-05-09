@@ -33,7 +33,7 @@ class EventAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'description', 'banner')
         }),
         ('Voting Pricing', {
-            'fields': ('price_per_vote', 'bundle_enabled', 'bundle_size', 'bundle_price'),
+            'fields': ('price_per_vote', 'bundle_enabled', 'bundle_size', 'bundle_price', 'max_votes_per_transaction'),
             'description': 'Set price per vote. Enable bundle pricing to sell votes in packs.',
         }),
         ('Visibility & Schedule', {

@@ -27,6 +27,10 @@ class Event(models.Model):
         max_digits=8, decimal_places=2, null=True, blank=True,
         help_text="Price for one bundle."
     )
+    max_votes_per_transaction = models.PositiveIntegerField(
+        default=1000,
+        help_text="Maximum votes allowed in a single transaction. Set to 0 for unlimited."
+    )
     is_active = models.BooleanField(default=True)
     show_results = models.BooleanField(
         default=False,

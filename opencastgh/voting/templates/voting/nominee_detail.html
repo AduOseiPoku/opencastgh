@@ -143,7 +143,12 @@
       <div class="form-group">
         <label class="form-label">Number of Votes</label>
         <input type="number" name="num_votes" id="id_num_votes" class="form-control"
-               min="1" value="1" oninput="updatePrice()">
+               min="1" {% if event.max_votes_per_transaction %}max="{{ event.max_votes_per_transaction }}"{% endif %} value="1" oninput="updatePrice()">
+        {% if event.max_votes_per_transaction %}
+        <small style="color:var(--text-dim);font-size:0.78rem;margin-top:0.4rem;display:block;">
+          Max {{ event.max_votes_per_transaction }} vote{{ event.max_votes_per_transaction|pluralize }} per transaction
+        </small>
+        {% endif %}
       </div>
 
       <button type="submit" class="btn btn-gold btn-block btn-lg" style="margin-top:0.5rem;">
