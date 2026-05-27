@@ -54,16 +54,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'opencastgh.wsgi.application'
 
+# Use DATABASE_URL from .env (django-environ). Example:
+# DATABASE_URL=postgres://user:password@localhost:5432/opencastgh
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'opencastgh',
-        'USER': 'opencastghuser',
-        'PASSWORD': 'your_strong_password',
-        'HOST': 'localhost',
-        'PORT': '',
-    }
+    'default': env.db(
+        'DATABASE_URL',
+        default='postgres://opencastghuser:Prince@2406@localhost:5432/opencastgh'
+    )
 }
+DATABASES['default']['CONN_MAX_AGE'] = 600
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
