@@ -37,7 +37,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'opencastgh.urls'
+ROOT_URLCONF = 'opencastmain.urls'
 
 TEMPLATES = [
     {
@@ -55,7 +55,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'opencastgh.wsgi.application'
+WSGI_APPLICATION = 'opencastmain.wsgi.application'
 
 DATABASES = {
     'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
